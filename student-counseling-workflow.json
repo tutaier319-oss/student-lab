@@ -1,0 +1,81 @@
+{
+  "name": "학생상담 자동응답 - Student Lab (독립 제작 예시)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "student-counseling",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "student-webhook",
+      "name": "Student Question",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ],
+      "webhookId": "student-lab-counseling"
+    },
+    {
+      "parameters": {
+        "jsCode": "const faq = [[[\"수강\", \"수업\", \"选课\", \"课程\"], \"수강신청\", \"수강신청 및 정정 기간은 해당 학기 공식 학사 공지를 확인하세요. 신청 가능 학점, 선수과목, 수업 시간 중복을 확인한 뒤 신청하세요. 오류가 있으면 소속 학과 사무실에 문의하세요.\"], [[\"장학\", \"등록금\", \"奖学金\", \"学费\"], \"장학·등록금\", \"장학금별 신청 자격과 제출 서류가 다릅니다. 학교의 장학 공지와 등록금 고지서를 확인하고, 본인에게 적용되는 기준은 담당 부서에 문의하세요. 이 답변에는 확정 금액이나 신청 마감일이 포함되어 있지 않습니다.\"], [[\"기숙사\", \"생활관\", \"宿舍\"], \"기숙사\", \"기숙사 입사 신청, 납부 및 입·퇴사 일정은 생활관 공지를 확인하세요. 신청 결과나 배정 관련 개인 문의는 생활관 담당자에게 확인하세요.\"], [[\"졸업\", \"학점\", \"毕业\", \"学分\"], \"졸업\", \"졸업 요건은 입학 연도, 학과 및 과정에 따라 다릅니다. 이수 학점, 필수과목, 논문 등 본인 과정의 요건을 학과 사무실이나 지도교수에게 확인하세요.\"], [[\"상담\", \"스트레스\", \"고민\", \"心理\", \"压力\"], \"학생상담\", \"학업이나 대학생활에 어려움이 있다면 교내 학생상담 담당 부서에 상담 예약 방법을 문의해 보세요. 이 페이지에서는 예약을 접수하거나 개인 상담 기록을 조회할 수 없습니다.\"]];\nconst body = $input.first().json.body || {};\nconst q = typeof body.question === 'string' ? body.question.trim().slice(0,1000) : '';\nconst matches = faq.filter(f => f[0].some(k => q.includes(k)));\nconst answer = !q ? '질문을 입력해 주세요.' : matches.length ? matches.map(f => '['+f[1]+']\\n'+f[2]).join('\\n\\n') : '관련 FAQ를 찾지 못했습니다. 질문을 구체적으로 입력하거나 소속 학과 사무실에 문의해 주세요.';\nreturn [{json:{answer,category:matches.map(f=>f[1]).join(', ')||'기타',source:'수업용 예시 FAQ'}}];"
+      },
+      "id": "faq-code",
+      "name": "FAQ Answer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        510,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "answer-response",
+      "name": "Return Answer",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        760,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Student Question": {
+      "main": [
+        [
+          {
+            "node": "FAQ Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FAQ Answer": {
+      "main": [
+        [
+          {
+            "node": "Return Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "pinData": {}
+}

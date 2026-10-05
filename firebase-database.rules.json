@@ -1,0 +1,23 @@
+{
+  "rules": {
+    "scores": {
+      ".read": "auth != null",
+      ".indexOn": [
+        "score"
+      ],
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid && newData.exists()",
+        ".validate": "newData.hasChildren(['name','score'])",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20"
+        },
+        "score": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 280 && newData.val() % 10 === 0"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}
